@@ -22,7 +22,13 @@ public class VirtualDirectory implements Serializable {
     }
 
     public boolean removeFile(String fileName) {
-        return files.removeIf(file -> file.getFileName().equals(fileName));
+        for (int i = 0; i < files.size(); i++) {
+            if (files.get(i).getFileName().equals(fileName)) {
+                files.remove(i);
+                return true;
+            }
+        }
+        return false;
     }
 
     public void addSubdirectory(VirtualDirectory dir) {

@@ -8,7 +8,9 @@ public class Main {
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Welcome to the Virtual Distributed File System");
+        System.out.println("             ***** WELCOME TO THE VIRTUAL DISTRIBUTED FILE SYSTEM! *****");
+        System.out.println(
+                "----------------------------------------------------------------------------------------------");
 
         while (true) {
             System.out.print("\n> ");
@@ -34,13 +36,18 @@ public class Main {
                         fileSystem.deleteFile(argsList[0]);
                     break;
                 case "open":
-                    if (argsList.length >= 1) {
-                        OpenFileHandle handle = fileSystem.openFile(argsList[0]);
+                    if (argsList.length >= 2) { // mode is also given
+                        String filename = argsList[0];
+                        String mode = argsList[1];
+                        OpenFileHandle handle = fileSystem.openFile(filename, mode);
                         if (handle != null) {
-                            openFiles.put(argsList[0], handle);
+                            openFiles.put(filename, handle);
                         }
+                    } else {
+                        System.out.println("Usage: open <filename> <mode>");
                     }
                     break;
+
                 case "close":
                     if (argsList.length >= 1)
                         openFiles.remove(argsList[0]);
@@ -92,6 +99,11 @@ public class Main {
                     System.out.println("Exiting. Goodbye!");
                     scanner.close();
                     return;
+                case "movefile":
+                    if (argsList.length >= 2)
+                        fileSystem.moveFile(argsList[0], argsList[1]);
+                    break;
+
                 default:
                     System.out.println("Unknown command.");
             }

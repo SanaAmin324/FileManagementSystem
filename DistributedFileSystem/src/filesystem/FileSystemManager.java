@@ -114,17 +114,49 @@ public class FileSystemManager {
         }
     }
 
-    public OpenFileHandle openFile(String fileName) {
+    // FileSystemManager.java
+    public OpenFileHandle openFile(String fileName, String mode) {
         VirtualFileInfo file = currentDirectory.getFile(fileName);
-        if (file != null) {
-            return new OpenFileHandle(file);
-        } else {
+        if (file == null) {
             System.out.println("File not found.");
             return null;
         }
+        return new OpenFileHandle(file, mode);
     }
 
     public String getCurrentDirectoryPath() {
         return currentDirectory.getName();
     }
+
+    // move
+    public void moveFile(String fileName, String targetDirName) {
+        VirtualFileInfo file = currentDirectory.getFile(fileName);
+        if (file == null) {
+            System.out.println("File not found: " + fileName);
+            return;
+        }
+
+        VirtualDirectory targetDir = currentDirectory.getSubdirectory(targetDirName);
+        if (targetDir == null) {
+            System.out.println("Target directory not found: " + targetDirName);
+            return;
+        }
+
+        // First remove from current directory
+        boolean removed = currentDirectory.removeFile(fileName);
+        if (!removed) {
+            System.out.println("Error removing file from current directory.");
+            return;
+        }
+
+        // THEN add to target directory
+        targetDir.addFile(file);
+
+        System.out.println("File moved successfully.");
+        System.out.println("Saving to disk...");
+        showMemoryMap(); // Show current state
+        saveToDisk();
+
+    }
+
 }
