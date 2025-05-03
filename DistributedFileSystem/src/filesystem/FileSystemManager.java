@@ -1,11 +1,14 @@
 package filesystem;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FileSystemManager {
     private VirtualDirectory root;
     private VirtualDirectory currentDirectory;
     private final String dataFilePath = "data/sample.dat";
+    private Map<String, OpenFileHandle> openFiles = new HashMap<>();
 
     public FileSystemManager() {
         loadFromDisk();
@@ -15,7 +18,8 @@ public class FileSystemManager {
         currentDirectory = root;
     }
 
-    public void createFile(String fileName) {
+    // Synchronize methods to ensure thread-safety
+    public synchronized void createFile(String fileName) {
         if (currentDirectory.getFile(fileName) == null) {
             VirtualFileInfo file = new VirtualFileInfo(fileName);
             currentDirectory.addFile(file);
@@ -25,7 +29,7 @@ public class FileSystemManager {
         }
     }
 
-    public void deleteFile(String fileName) {
+    public synchronized void deleteFile(String fileName) {
         boolean removed = currentDirectory.removeFile(fileName);
         if (removed) {
             System.out.println("File deleted: " + fileName);
@@ -34,7 +38,7 @@ public class FileSystemManager {
         }
     }
 
-    public void mkdir(String dirName) {
+    public synchronized void mkdir(String dirName) {
         if (currentDirectory.getSubdirectory(dirName) == null) {
             VirtualDirectory newDir = new VirtualDirectory(dirName, currentDirectory);
             currentDirectory.addSubdirectory(newDir);
@@ -44,7 +48,7 @@ public class FileSystemManager {
         }
     }
 
-    public void chdir(String dirName) {
+    public synchronized void chdir(String dirName) {
         if (dirName.equals("..")) {
             if (currentDirectory.getParent() != null) {
                 currentDirectory = currentDirectory.getParent();
@@ -61,12 +65,13 @@ public class FileSystemManager {
         }
     }
 
-    public void showMemoryMap() {
+    public synchronized String showMemoryMap() {
         System.out.println("Memory Map (File System Structure):");
         printDirectoryContents(root, 0); // Start from the root directory
+        return dataFilePath;
     }
 
-    private void printDirectoryContents(VirtualDirectory directory, int indentLevel) {
+    private synchronized void printDirectoryContents(VirtualDirectory directory, int indentLevel) {
         // Print current directory
         String indent = "  ".repeat(indentLevel);
         System.out.println(indent + "Directory: " + directory.getName());
@@ -82,18 +87,19 @@ public class FileSystemManager {
         }
     }
 
-    public void listFiles() {
+    public synchronized void listFiles() {
         System.out.println("Listing files in " + currentDirectory.getName() + ":");
         for (VirtualFileInfo file : currentDirectory.getFiles()) {
             System.out.println("  File: " + file.getFileName());
         }
     }
 
-    public void listContents() {
+    public synchronized void listContents() {
         currentDirectory.listContents();
     }
 
-    public void saveToDisk() {
+    // Ensure thread-safe saving and loading
+    public synchronized void saveToDisk() {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dataFilePath))) {
             oos.writeObject(root);
             System.out.println("File system saved.");
@@ -102,7 +108,7 @@ public class FileSystemManager {
         }
     }
 
-    public void loadFromDisk() {
+    public synchronized void loadFromDisk() {
         File file = new File(dataFilePath);
         if (file.exists()) {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -114,22 +120,24 @@ public class FileSystemManager {
         }
     }
 
-    // FileSystemManager.java
-    public OpenFileHandle openFile(String fileName, String mode) {
+    // Synchronize file opening for thread safety
+    public synchronized OpenFileHandle openFile(String fileName, String mode) {
         VirtualFileInfo file = currentDirectory.getFile(fileName);
         if (file == null) {
             System.out.println("File not found.");
             return null;
         }
-        return new OpenFileHandle(file, mode);
+        OpenFileHandle handle = new OpenFileHandle(file, mode);
+        openFiles.put(fileName, handle); // Ensure that files are opened in a thread-safe way
+        return handle;
     }
 
-    public String getCurrentDirectoryPath() {
+    public synchronized String getCurrentDirectoryPath() {
         return currentDirectory.getName();
     }
 
-    // move
-    public void moveFile(String fileName, String targetDirName) {
+    // Synchronize move operation
+    public synchronized void moveFile(String fileName, String targetDirName) {
         VirtualFileInfo file = currentDirectory.getFile(fileName);
         if (file == null) {
             System.out.println("File not found: " + fileName);
@@ -156,7 +164,28 @@ public class FileSystemManager {
         System.out.println("Saving to disk...");
         showMemoryMap(); // Show current state
         saveToDisk();
-
     }
 
+    // Synchronize writeToFile method
+    public synchronized void writeToFile(String filename, String content) {
+        OpenFileHandle handle = openFiles.get(filename);
+        if (handle == null) {
+            System.out.println("File not open: " + filename);
+            return;
+        }
+        handle.writeToFile(content);
+    }
+
+    // Synchronize closeFile method
+    public synchronized void closeFile(String filename) {
+        if (!openFiles.containsKey(filename)) {
+            System.out.println("File is not open: " + filename);
+            return;
+        }
+
+        OpenFileHandle handle = openFiles.get(filename);
+        handle.close(); // Optional: implement a `close` method in OpenFileHandle if needed
+        openFiles.remove(filename);
+        System.out.println("File closed: " + filename);
+    }
 }

@@ -1,0 +1,4 @@
+File created: file1.txt
+File opened: file1.txt with mode: w
+Unknown command: write
+File closed: file1.txt

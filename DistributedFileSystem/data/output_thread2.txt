@@ -1,0 +1,6 @@
+File created: file2.txt
+File opened: file2.txt with mode: w
+Unknown command: write
+Unknown command: write
+Unknown command: memmap
+File closed: file2.txt

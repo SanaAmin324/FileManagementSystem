@@ -2,7 +2,7 @@ package filesystem;
 
 public class OpenFileHandle {
     private VirtualFileInfo file;
-    private String mode; // New field to store mode
+    private String mode;
 
     public OpenFileHandle(VirtualFileInfo file, String mode) {
         this.file = file;
@@ -14,7 +14,7 @@ public class OpenFileHandle {
             System.out.println("File not opened in write mode!");
             return;
         }
-        file.appendData(text);
+        file.appendData(text); // Ensure appendData is correctly implemented in VirtualFileInfo
     }
 
     public void writeToFile(int position, String text) {
@@ -22,7 +22,7 @@ public class OpenFileHandle {
             System.out.println("File not opened in write mode!");
             return;
         }
-        file.writeAt(position, text);
+        file.writeAt(position, text); // Ensure writeAt is correctly implemented in VirtualFileInfo
     }
 
     public String readFromFile() {
@@ -53,5 +53,9 @@ public class OpenFileHandle {
             return;
         }
         file.truncate(size);
+    }
+
+    public void close() {
+        System.out.println("File '" + file.getFileName() + "' has been closed.");
     }
 }

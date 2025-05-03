@@ -1,12 +1,32 @@
 package filesystem;
 
-import java.util.*; // for Map, HashMap, etc.
+import java.util.*;
+import java.io.*;
 
 public class Main {
     private static FileSystemManager fileSystem = new FileSystemManager();
     private static Map<String, OpenFileHandle> openFiles = new HashMap<>();
 
     public static void main(String[] args) {
+        // ---------- Threaded User Execution ----------
+        if (args.length == 1) {
+            try {
+                int numThreads = Integer.parseInt(args[0]);
+
+                for (int i = 1; i <= numThreads; i++) {
+                    String inputFileName = "data/input_thread" + i + ".txt";
+                    String outputFileName = "data/output_thread" + i + ".txt";
+
+                    Thread thread = new Thread(new ThreadedUser(inputFileName, outputFileName));
+                    thread.start();
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid number of threads. Please provide a valid integer.");
+                return;
+            }
+        }
+
+        // ---------- Interactive Shell ----------
         Scanner scanner = new Scanner(System.in);
         System.out.println("             ***** WELCOME TO THE VIRTUAL DISTRIBUTED FILE SYSTEM! *****");
         System.out.println(
@@ -36,7 +56,7 @@ public class Main {
                         fileSystem.deleteFile(argsList[0]);
                     break;
                 case "open":
-                    if (argsList.length >= 2) { // mode is also given
+                    if (argsList.length >= 2) {
                         String filename = argsList[0];
                         String mode = argsList[1];
                         OpenFileHandle handle = fileSystem.openFile(filename, mode);
@@ -47,7 +67,6 @@ public class Main {
                         System.out.println("Usage: open <filename> <mode>");
                     }
                     break;
-
                 case "close":
                     if (argsList.length >= 1)
                         openFiles.remove(argsList[0]);
@@ -103,7 +122,6 @@ public class Main {
                     if (argsList.length >= 2)
                         fileSystem.moveFile(argsList[0], argsList[1]);
                     break;
-
                 default:
                     System.out.println("Unknown command.");
             }

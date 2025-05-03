@@ -1,0 +1,6 @@
+create file2.txt
+open file2.txt w
+write file2.txt 123
+write file2.txt xyz
+memmap
+close file2.txt

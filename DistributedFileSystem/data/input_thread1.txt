@@ -1,0 +1,4 @@
+create file1.txt
+open file1.txt w
+write file1.txt abcd
+close file1.txt
