@@ -47,7 +47,7 @@ public class ThreadedUser implements Runnable {
                             writer.println("Invalid open command.");
                         }
                         break;
-                    case "write_to_file":
+                    case "write":
                         if (argsList.length >= 2) {
                             String filename = argsList[0];
                             String data = argsList[1].replaceAll("^\"|\"$", "");
